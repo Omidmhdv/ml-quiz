@@ -483,13 +483,139 @@
       height: 10px;
       border-radius: 50%;
     }
+
+    /* ── API KEY SCREEN ── */
+    #apikey-screen {
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      gap: 0;
+    }
+
+    .apikey-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      padding: 40px 0;
+      width: 100%;
+    }
+
+    .apikey-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+
+    .apikey-sub {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .apikey-input-wrap {
+      width: 100%;
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .apikey-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 14px 48px 14px 16px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'DM Mono', monospace;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .apikey-input:focus { border-color: var(--purple); }
+    .apikey-input::placeholder { color: var(--muted); }
+
+    .apikey-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+    }
+
+    .apikey-hint {
+      background: rgba(139,92,246,0.08);
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .apikey-hint p {
+      font-size: 12px;
+      color: var(--sub);
+      line-height: 1.6;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .apikey-hint a {
+      color: var(--purple);
+      text-decoration: none;
+    }
+
+    .apikey-error {
+      color: var(--red);
+      font-size: 12px;
+      margin-bottom: 12px;
+      font-family: 'DM Mono', monospace;
+      display: none;
+    }
   </style>
 </head>
 <body>
 <div id="app">
 
+  <!-- API KEY SETUP -->
+  <div id="apikey-screen" class="screen">
+    <div class="home-glow"></div>
+    <div class="apikey-inner">
+      <div class="badge">🔑 SETUP</div>
+      <h2 class="apikey-title">Enter your API Key</h2>
+      <p class="apikey-sub">Required once to generate quizzes.<br>Stored only on your device.</p>
+
+      <div class="apikey-hint">
+        <p>Get a free key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+        → Log in → API Keys → Create Key<br><br>
+        Your key stays on your phone only.<br>It is never sent anywhere except Anthropic's API.</p>
+      </div>
+
+      <div class="apikey-input-wrap">
+        <input id="apikey-input" class="apikey-input" type="password"
+          placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false" />
+        <button class="apikey-toggle" onclick="toggleKeyVisibility()" id="key-toggle">👁</button>
+      </div>
+
+      <p class="apikey-error" id="apikey-error">Please enter a valid API key (starts with sk-ant-)</p>
+
+      <button class="btn-primary" onclick="saveApiKey()">Save & Continue →</button>
+    </div>
+  </div>
+
   <!-- HOME -->
-  <div id="home-screen" class="screen active">
+  <div id="home-screen" class="screen">
     <div class="home-glow"></div>
     <div class="home-inner">
       <div class="badge">⚡ DAILY</div>
@@ -524,6 +650,8 @@
       <button class="btn-primary" onclick="startQuiz()">Generate Today's Quiz →</button>
       <div style="height:12px"></div>
       <button class="btn-secondary" onclick="showHistory()">📊 Past Results</button>
+      <div style="height:12px"></div>
+      <button style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Mono',monospace;" onclick="showScreen('apikey-screen')">⚙ Change API Key</button>
     </div>
   </div>
 
@@ -599,7 +727,29 @@ Include conceptual, applied, and tricky questions. Vary difficulty: 3 easy, 4 me
 Return ONLY valid JSON, no markdown, no backticks, no preamble:
 {"quiz_title":"short creative title","questions":[{"id":1,"question":"...","options":{"A":"...","B":"...","C":"...","D":"..."},"correct":"A","explanation":"brief explanation","difficulty":"easy","topic":"short topic"}]}`;
 
-// ── STORAGE ──────────────────────────────────────────────────────────────
+// ── API KEY ────────────────────────────────────────────────────────────────
+function getApiKey() {
+  return localStorage.getItem('mlquiz_apikey') || '';
+}
+function saveApiKey() {
+  const val = document.getElementById('apikey-input').value.trim();
+  const errEl = document.getElementById('apikey-error');
+  if (!val.startsWith('sk-ant-') && !val.startsWith('sk-')) {
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  localStorage.setItem('mlquiz_apikey', val);
+  showScreen('home-screen');
+}
+function toggleKeyVisibility() {
+  const input = document.getElementById('apikey-input');
+  const btn = document.getElementById('key-toggle');
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁'; }
+}
+
+
 function getHistory() {
   try { return JSON.parse(localStorage.getItem('mlquiz_history') || '[]'); } catch { return []; }
 }
@@ -665,9 +815,15 @@ async function startQuiz() {
   document.getElementById('home-error').style.display = 'none';
   try {
     const seed = Math.random().toString(36).slice(2, 10);
+    const apiKey = getApiKey();
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
@@ -686,7 +842,10 @@ async function startQuiz() {
     showScreen('quiz-screen');
   } catch (e) {
     console.error(e);
-    document.getElementById('home-error').textContent = 'Failed to generate quiz. Check internet connection.';
+    const msg = e.message?.includes('401') || e.message?.includes('403')
+      ? 'Invalid API key. Tap "Change API Key" to update it.'
+      : 'Failed to generate quiz. Check your internet connection.';
+    document.getElementById('home-error').textContent = msg;
     document.getElementById('home-error').style.display = 'block';
     showScreen('home-screen');
   }
@@ -849,6 +1008,11 @@ if ('serviceWorker' in navigator) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 loadHomeStats();
+if (getApiKey()) {
+  showScreen('home-screen');
+} else {
+  showScreen('apikey-screen');
+}
 </script>
 </body>
 </html>
