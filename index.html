@@ -826,7 +826,7 @@ async function startQuiz() {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 1000,
+        max_tokens: 4000,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: 'Generate a fresh ML quiz. Seed: ' + seed + '. Make questions specific and challenging, testing real ML intuition not just definitions.' }]
       })
